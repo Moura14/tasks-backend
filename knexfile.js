@@ -5,14 +5,12 @@
  */
 module.exports = {
 
-  
-
 
     client: 'postgresql',
     connection: {
-      database: 'my_db',
-      user:     'username',
-      password: 'password'
+      database: 'tasks',
+      user:     'postgres',
+      password: '12345'
     },
     pool: {
       min: 2,
