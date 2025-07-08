@@ -1,7 +1,7 @@
 const moment = require('moment')
 
 module.exports = app => {
-    const getTasks = async (req, res) => {
+    const getTasks =  (req, res) => {
         const date = req.query.date ? req.query.date : moment().endOf('day').toDate()
         app.db('tasks')
         .where({userId: req.user.id})
@@ -10,18 +10,18 @@ module.exports = app => {
         .then(tasks => {
             res.json(tasks)
         }).catch(err => {
-            res.status(500).json(err)
+            res.status(400).json(err)
         })
     }
 
     const save = (req, res) => {
-        if(!req.body.des.trim()){
+        if(!req.body.desc.trim()){
             return res.status(400).send('Descrição é um atributo obrigatório')
         }
 
         req.body.userId = req.user.id
 
-        app.db('tasks').inser(req.body).then(_ => res.status(204).send())
+        app.db('tasks').insert(req.body).then(_ => res.status(201).send())
         .catch(err => {
             res.status(400).json(err)
         })
@@ -43,5 +43,36 @@ module.exports = app => {
         .catch(err => {
             res.status(400).json(err)
         })
+    }
+
+     const updateTaskDoneAt = (req, res, doneAt) => {
+        app.db('tasks')
+            .where({ id: req.params.id, userId: req.user.id })
+            .update({ doneAt })
+            .then(_ => res.status(204).send())
+            .catch(err => res.status(400).json(err))
+    }
+
+    const toggleTask = (req, res) => {
+        app.db('tasks')
+            .where({ id: req.params.id, userId: req.user.id })
+            .first()
+            .then(task => {
+                if (!task) {
+                    const msg = `Task com id ${req.params.id} não encontrada.`
+                    return res.status(400).send(msg)
+                }
+
+                const doneAt = task.doneAt ? null : new Date()
+                updateTaskDoneAt(req, res, doneAt)
+            })
+            .catch(err => res.status(400).json(err))
+    }
+
+    return {
+        getTasks,
+        save,
+        remove,
+        toggleTask
     }
 }
